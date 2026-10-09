@@ -53,7 +53,9 @@ Consulte os detalhes de execução, rotas, configuração e limites no [README d
 ## Testes
 
 ```bash
-cd wobbuffe-api
+cd ../wobbuffe-starter
+./mvnw -B verify install
+cd ../wobbuffe-demo/wobbuffe-api
 ./mvnw -B verify
 ```
 

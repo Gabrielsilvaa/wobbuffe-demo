@@ -18,7 +18,7 @@ cd ../wobbuffe-demo/wobbuffe-api
 
 Por padrão, o encaminhamento está desativado e a API usa a PokéAPI pública. `POKEAPI_BASE_URL` permite apontar para outro servidor compatível. Não há dependência de acesso à PokéAPI para executar os testes.
 
-Para subir API, LocalStack, fila e DLQ:
+Para subir API, LocalStack, fila e DLQ, execute a partir da raiz do repositório `wobbuffe-demo` (não da pasta `wobbuffe-api`):
 
 ```bash
 cp infra/.env.example infra/.env
@@ -99,6 +99,8 @@ Não existe outbox. H2 e SQS não participam de uma transação distribuída; se
 No perfil `prod`, o H2 console fica desativado e o Hibernate não cria/atualiza schema (`ddl-auto=none`); este MVP não inclui migrações de produção.
 
 ## Validação
+
+Depois de instalar o starter local como descrito em “Executar localmente”, rode os testes da API a partir de `wobbuffe-demo/wobbuffe-api`:
 
 ```bash
 ./mvnw -B verify
