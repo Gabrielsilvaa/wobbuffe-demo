@@ -1,0 +1,60 @@
+services:
+  localstack:
+    image: localstack/localstack:4.7.0
+    container_name: wobbuffe-localstack
+    ports:
+      - "127.0.0.1:4566:4566"
+    environment:
+      SERVICES: sqs
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+      WOBBUFFE_CONSUMER_MAX_RECEIVE_COUNT: ${WOBBUFFE_CONSUMER_MAX_RECEIVE_COUNT:-5}
+      SQS_ENDPOINT_STRATEGY: path
+    volumes:
+      - ./localstack/init:/etc/localstack/init/ready.d:ro
+      - localstack-data:/var/lib/localstack
+    healthcheck:
+      test: ["CMD", "bash", "-c", "awslocal sqs list-queues >/dev/null 2>&1"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  wobbuffe-api:
+    build:
+      context: ../..
+      dockerfile: wobbuffe-demo/wobbuffe-api/Dockerfile
+    container_name: wobbuffe-api
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-compose}
+      POKEAPI_BASE_URL: ${POKEAPI_BASE_URL:-https://pokeapi.co/api/v2}
+      WOBBUFFE_ROUTING_ENABLED: ${WOBBUFFE_ROUTING_ENABLED:-true}
+      WOBBUFFE_SQS_ENDPOINT: ${WOBBUFFE_SQS_ENDPOINT:-http://localstack:4566}
+      WOBBUFFE_SQS_QUEUE_URL: ${WOBBUFFE_SQS_QUEUE_URL:-http://localstack:4566/queue/us-east-1/000000000000/wobbuffe-operations}
+      WOBBUFFE_CONSUMER_ENABLED: ${WOBBUFFE_CONSUMER_ENABLED:-true}
+      WOBBUFFE_CONSUMER_QUEUE_URL: ${WOBBUFFE_CONSUMER_QUEUE_URL:-http://localstack:4566/queue/us-east-1/000000000000/wobbuffe-operations}
+      WOBBUFFE_CONSUMER_DLQ_URL: ${WOBBUFFE_CONSUMER_DLQ_URL:-http://localstack:4566/queue/us-east-1/000000000000/wobbuffe-operations-dlq}
+      WOBBUFFE_CONSUMER_POLL_WAIT_SECONDS: ${WOBBUFFE_CONSUMER_POLL_WAIT_SECONDS:-20}
+      WOBBUFFE_CONSUMER_BATCH_SIZE: ${WOBBUFFE_CONSUMER_BATCH_SIZE:-5}
+      WOBBUFFE_CONSUMER_VISIBILITY_TIMEOUT_SECONDS: ${WOBBUFFE_CONSUMER_VISIBILITY_TIMEOUT_SECONDS:-90}
+      WOBBUFFE_CONSUMER_MAX_RECEIVE_COUNT: ${WOBBUFFE_CONSUMER_MAX_RECEIVE_COUNT:-5}
+      WOBBUFFE_CONSUMER_MAX_CONCURRENCY: ${WOBBUFFE_CONSUMER_MAX_CONCURRENCY:-2}
+      WOBBUFFE_CONSUMER_RATE_LIMIT_PER_SECOND: ${WOBBUFFE_CONSUMER_RATE_LIMIT_PER_SECOND:-5}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-test}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-test}
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      localstack:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 30s
+
+volumes:
+  localstack-data:

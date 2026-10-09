@@ -1,0 +1,14 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+  h2:
+    console:
+      enabled: false
+
+management:
+  endpoint:
+    env:
+      show-values: never
+    configprops:
+      show-values: never
